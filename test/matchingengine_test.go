@@ -8,7 +8,6 @@ import (
 	"jollej/db-scout/internal/infrastructure/repository/instrument"
 	"jollej/db-scout/internal/infrastructure/repository/order"
 	"testing"
-	"time"
 )
 
 func TestMatchingEngineInit(t *testing.T) {
@@ -22,7 +21,7 @@ func TestMatchingEngineInit(t *testing.T) {
 	orderService := orderApp.NewOrderService(orderRepo)
 	engine := matchingengine.NewMatchingEngine(instrumentService, orderService)
 
-	time.Sleep(4000 * time.Millisecond)
+	// time.Sleep(4000 * time.Millisecond)
 	if engine == nil {
 		t.Fatal("Expected MatchingEngine to be initialized, got nil")
 	}
