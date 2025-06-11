@@ -32,28 +32,26 @@ func (t *AvlOrderTree) GetBalance() int {
 	return t.left.Height() - t.right.Height()
 }
 
-func (t *AvlOrderTree) RotateRight() {
-	if t == nil || t.left == nil {
-		return
-	}
+func (t *AvlOrderTree) RotateRight() *AvlOrderTree {
 	newRoot := t.left
 	t.left = newRoot.right
 	newRoot.right = t
+
 	t.height = max(t.left.Height(), t.right.Height()) + 1
 	newRoot.height = max(newRoot.left.Height(), newRoot.right.Height()) + 1
-	*t = *newRoot
+
+	return newRoot
 }
 
-func (t *AvlOrderTree) RotateLeft() {
-	if t == nil || t.right == nil {
-		return
-	}
+func (t *AvlOrderTree) RotateLeft() *AvlOrderTree {
 	newRoot := t.right
 	t.right = newRoot.left
 	newRoot.left = t
+
 	t.height = max(t.left.Height(), t.right.Height()) + 1
 	newRoot.height = max(newRoot.left.Height(), newRoot.right.Height()) + 1
-	*t = *newRoot
+
+	return newRoot
 }
 
 func (t *AvlOrderTree) Insert(order Order) {
@@ -63,7 +61,6 @@ func (t *AvlOrderTree) Insert(order Order) {
 	log.Println("Inserting order:", order)
 	orderPrice, _ := order.Price.Float64()
 	dataPrice, _ := t.data.Price.Float64()
-	log.Println("Current node price:", dataPrice, "Order price:", orderPrice)
 	if orderPrice < dataPrice {
 		if t.left == nil {
 			t.left = NewAvlOrderTree(order)
@@ -71,12 +68,9 @@ func (t *AvlOrderTree) Insert(order Order) {
 			t.left.Insert(order)
 		}
 	} else if orderPrice > dataPrice {
-		log.Println("Inserting to the right subtree")
 		if t.right == nil {
-			log.Println("Creating new right subtree for order:", order)
 			t.right = NewAvlOrderTree(order)
 		} else {
-			log.Println("Inserting into existing right subtree")
 			t.right.Insert(order)
 		}
 	} else {
@@ -86,27 +80,32 @@ func (t *AvlOrderTree) Insert(order Order) {
 	t.height = max(t.left.Height(), t.right.Height()) + 1
 
 	balance := t.GetBalance()
-	leftValue, _ := t.left.data.Price.Float64()
-	rightValue, _ := t.right.data.Price.Float64()
-	if balance > 1 && orderPrice < leftValue {
-		t.RotateRight()
-		return
+	if balance > 1 {
+		if t.left != nil {
+			leftValue, _ := t.left.data.Price.Float64()
+			if orderPrice < leftValue {
+				t = t.RotateRight()
+				return
+			} else if orderPrice > leftValue {
+				t = t.left.RotateLeft()
+				t = t.RotateRight()
+				return
+			}
+		}
 	}
 
-	if balance < -1 && orderPrice > rightValue {
-		t.RotateLeft()
-		return
+	if balance < -1 {
+		if t.right != nil {
+			rightValue, _ := t.right.data.Price.Float64()
+			if orderPrice > rightValue {
+				t = t.RotateLeft()
+				return
+			} else if orderPrice < rightValue {
+				t = t.right.RotateRight()
+				t = t.RotateLeft()
+				return
+			}
+		}
 	}
 
-	if balance > 1 && orderPrice > leftValue {
-		t.left.RotateLeft()
-		t.RotateRight()
-		return
-	}
-
-	if balance < -1 && orderPrice < rightValue {
-		t.right.RotateRight()
-		t.RotateLeft()
-		return
-	}
 }

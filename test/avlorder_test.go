@@ -23,6 +23,11 @@ func TestAVLOrder(t *testing.T) {
 		t.Error("Expected AVL tree to be initialized, but it is nil")
 	}
 
+	log.Println("AVL Tree after inserting orders:", avl)
+	if avl.Height() == 0 {
+		t.Error("Expected AVL tree height to be greater than 0, but it is 0")
+	}
+
 }
 
 func createDummyOrders() []orderDomain.Order {
