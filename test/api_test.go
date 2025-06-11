@@ -128,3 +128,29 @@ func TestCreateOrder(t *testing.T) {
 	}
 
 }
+
+func TestGetBalance(t *testing.T) {
+
+	// Initialize the database
+	db, err := infrastructure.InitDb()
+	if err != nil {
+		t.Fatalf("Failed to initialize the database: %v", err)
+	}
+
+	mux := api.NewMux(db)
+	req := httptest.NewRequest(http.MethodGet, "/api/portfolio/1/balance", nil)
+	res := httptest.NewRecorder()
+
+	mux.ServeHTTP(res, req)
+
+	if res.Code != http.StatusOK {
+		t.Errorf("Expected status code %d, got %d", http.StatusOK, res.Code)
+	}
+
+	resBody := res.Body.String()
+
+	if len(resBody) == 0 {
+		t.Error("Expected to have some content in the response")
+	}
+
+}

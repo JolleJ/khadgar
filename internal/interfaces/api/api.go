@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	balanceApp "jollej/db-scout/internal/application/balance"
 	instrumentApplication "jollej/db-scout/internal/application/instrument"
 	orderApplication "jollej/db-scout/internal/application/order"
 	portfolioApplication "jollej/db-scout/internal/application/portfolio"
@@ -11,6 +12,7 @@ import (
 	orderRepo "jollej/db-scout/internal/infrastructure/repository/order"
 	portfolioRepo "jollej/db-scout/internal/infrastructure/repository/portfolio"
 	positionRepo "jollej/db-scout/internal/infrastructure/repository/position"
+	"jollej/db-scout/internal/infrastructure/repository/transaction"
 	userRepo "jollej/db-scout/internal/infrastructure/repository/user"
 	"jollej/db-scout/internal/interfaces/api/handlers/instrument"
 	"jollej/db-scout/internal/interfaces/api/handlers/order"
@@ -55,14 +57,19 @@ func newApiMux(db *sql.DB) *http.ServeMux {
 	orderRepo := orderRepo.NewOrderRepo(db)
 	orderService := orderApplication.NewOrderService(orderRepo)
 
+	transactionRepo := transaction.NewTransactionRepo(db)
+
+	balanceService := balanceApp.NewBalanceService(transactionRepo)
+
 	instrumentHandler := instrument.NewInstrumentHandler(instrumentService)
 	usersHandler := user.NewUsersHandler(userService)
-	portfolioHandler := portfolio.NewPortfolioHandler(portfolioService)
+	portfolioHandler := portfolio.NewPortfolioHandler(portfolioService, balanceService)
 	positionHandler := position.NewPositionHandler(positionService)
 	orderHandler := order.NewOrderHandler(orderService)
 	// Eventually all actions should be split into their own resource areas
 	// User actions
 	mux.HandleFunc("GET /users", usersHandler.ListUsers)
+	mux.HandleFunc("GET /portfolio/{id}/balance", portfolioHandler.GetBalance)
 	mux.HandleFunc("POST /portfolio/{id}/orders", orderHandler.CreateOrder)
 	mux.HandleFunc("GET /portfolio/{id}", portfolioHandler.GetPortfolio)
 	mux.HandleFunc("GET /instruments", instrumentHandler.ListInstruments)
