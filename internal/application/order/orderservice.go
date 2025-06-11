@@ -16,3 +16,8 @@ func NewOrderService(orderRepo order.OrderRepo) *OrderService {
 func (o *OrderService) Create(ctx context.Context, order order.Order) (int, error) {
 	return o.orderRepo.Create(ctx, order)
 }
+
+func (o *OrderService) ListOrdersByInstrument(ctx context.Context, symbol string) ([]order.Order, error) {
+	orders, err := o.orderRepo.ListByInstrument(ctx, symbol)
+	return orders, err
+}

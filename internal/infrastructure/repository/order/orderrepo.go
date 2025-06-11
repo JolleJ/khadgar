@@ -4,10 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"jollej/db-scout/internal/domain/order"
+	"sync"
 )
 
 type OrderRepo struct {
-	db *sql.DB
+	// dbMutex is used to ensure that only one goroutine can access the database at a time. This is necessary because SQLite does not support concurrent writes well.
+	dbMutex sync.Mutex
+	db      *sql.DB
 }
 
 func NewOrderRepo(db *sql.DB) order.OrderRepo {
@@ -27,4 +30,26 @@ func (o *OrderRepo) Create(ctx context.Context, order order.Order) (int, error) 
 	}
 
 	return int(id), nil
+}
+
+func (o *OrderRepo) ListByInstrument(ctx context.Context, symbol string) ([]order.Order, error) {
+	o.dbMutex.Lock()
+	defer o.dbMutex.Unlock()
+	query := `SELECT id, portfolio_id, instrument_id, side, quantity, price, status FROM orders`
+	rows, err := o.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var orders []order.Order
+	for rows.Next() {
+		var ord order.Order
+		if err := rows.Scan(&ord.Id, &ord.PortfolioId, &ord.InstrumentId, &ord.Side, &ord.Quantity, &ord.Price, &ord.Status); err != nil {
+			return nil, err
+		}
+		orders = append(orders, ord)
+	}
+
+	return orders, nil
 }

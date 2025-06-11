@@ -24,7 +24,7 @@ import (
 	"net/http"
 )
 
-func NewMux(db *sql.DB) *http.ServeMux {
+func NewApp(db *sql.DB) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	log.Println("Starting server")
@@ -61,6 +61,7 @@ func newApiMux(db *sql.DB) *http.ServeMux {
 
 	balanceService := balanceApp.NewBalanceService(transactionRepo)
 
+	// matchingengine.NewMatchingEngine()
 	instrumentHandler := instrument.NewInstrumentHandler(instrumentService)
 	usersHandler := user.NewUsersHandler(userService)
 	portfolioHandler := portfolio.NewPortfolioHandler(portfolioService, balanceService)

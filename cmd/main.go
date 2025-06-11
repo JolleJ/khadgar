@@ -19,7 +19,7 @@ func main() {
 		log.Fatalf("Error while initializing DB %v", err)
 	}
 	defer db.Close()
-	err = http.ListenAndServe(":8080", api.NewMux(db))
+	err = http.ListenAndServe(":8080", api.NewApp(db))
 	if err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}

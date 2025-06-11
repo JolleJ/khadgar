@@ -20,7 +20,7 @@ func TestGetUsersApiEndpoint(t *testing.T) {
 		t.Fatalf("Failed to initialize the database: %v", err)
 	}
 
-	mux := api.NewMux(db)
+	mux := api.NewApp(db)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/users", nil)
 	res := httptest.NewRecorder()
@@ -45,7 +45,7 @@ func TestGetPortfolioApiEndpoint(t *testing.T) {
 		t.Fatalf("Failed to initialize the database: %v", err)
 	}
 
-	mux := api.NewMux(db)
+	mux := api.NewApp(db)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/portfolio/1", nil)
 	res := httptest.NewRecorder()
@@ -70,7 +70,7 @@ func TestGetListInstruments(t *testing.T) {
 		t.Fatalf("Failed to initialize the database: %v", err)
 	}
 
-	mux := api.NewMux(db)
+	mux := api.NewApp(db)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/instruments", nil)
 	res := httptest.NewRecorder()
@@ -111,7 +111,7 @@ func TestCreateOrder(t *testing.T) {
 		t.Fatalf("Failed to marshal order details: %v", err)
 	}
 
-	mux := api.NewMux(db)
+	mux := api.NewApp(db)
 	req := httptest.NewRequest(http.MethodPost, "/api/portfolio/1/orders", bytes.NewReader(orderDetailsJson))
 	res := httptest.NewRecorder()
 
@@ -137,7 +137,7 @@ func TestGetBalance(t *testing.T) {
 		t.Fatalf("Failed to initialize the database: %v", err)
 	}
 
-	mux := api.NewMux(db)
+	mux := api.NewApp(db)
 	req := httptest.NewRequest(http.MethodGet, "/api/portfolio/1/balance", nil)
 	res := httptest.NewRecorder()
 

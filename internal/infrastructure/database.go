@@ -46,6 +46,11 @@ func InitDb() (*sql.DB, error) {
 		log.Fatalf("Error creating account_balances table: %v", err)
 	}
 
+	err = StartWal(db)
+	if err != nil {
+		log.Fatalf("Error starting WAL mode: %v", err)
+	}
+
 	err = createDummyData(db)
 	if err != nil {
 		log.Fatalf("Error creating dummy datata: %v", err)
@@ -235,5 +240,11 @@ func createDummyData(db *sql.DB) error {
 	(5, 'USD', 8000.00);
 	`
 	_, err := db.Exec(query)
+	return err
+}
+
+func StartWal(db *sql.DB) error {
+	// Enable WAL mode
+	_, err := db.Exec("PRAGMA journal_mode=WAL;")
 	return err
 }
