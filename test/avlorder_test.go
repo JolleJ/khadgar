@@ -62,7 +62,7 @@ func TestAVLFindMaxOrder(t *testing.T) {
 	}
 }
 
-func createAvlTree(orders []orderDomain.Order) *orderDomain.AvlOrderTree {
+func createAvlTree(orders []orderDomain.Order) *orderDomain.AvlOrderTreeNode {
 	if len(orders) == 0 {
 		return nil
 	}
@@ -77,12 +77,13 @@ func createAvlTree(orders []orderDomain.Order) *orderDomain.AvlOrderTree {
 
 func createDummyOrders() []orderDomain.Order {
 	return []orderDomain.Order{
-		{Id: 1, Price: decimal.NewFromFloat(100.00), Side: "buy"},
+		{Id: 1, Price: decimal.NewFromFloat(100.00), Side: "buy", CreatedAt: "2023-10-01T12:00:00Z"},
 		{Id: 2, Price: decimal.NewFromFloat(200.00), Side: "sell"},
 		{Id: 3, Price: decimal.NewFromFloat(150.00), Side: "buy"},
 		{Id: 4, Price: decimal.NewFromFloat(250.00), Side: "sell"},
 		{Id: 5, Price: decimal.NewFromFloat(300.00), Side: "buy"},
-		{Id: 6, Price: decimal.NewFromFloat(50.00), Side: "sell"},
+		{Id: 6, Price: decimal.NewFromFloat(50.00), Side: "sell", CreatedAt: "2023-10-01T12:00:00Z"},
+		{Id: 6, Price: decimal.NewFromFloat(50.00), Side: "sell", CreatedAt: "2023-10-01T13:00:00Z"},
 		{Id: 7, Price: decimal.NewFromFloat(75.00), Side: "buy"},
 		{Id: 8, Price: decimal.NewFromFloat(125.00), Side: "sell"},
 		{Id: 9, Price: decimal.NewFromFloat(175.00), Side: "buy"},
