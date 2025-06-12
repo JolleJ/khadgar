@@ -2,7 +2,6 @@ package test
 
 import (
 	orderDomain "jollej/db-scout/internal/domain/order"
-	"log"
 	"testing"
 
 	"github.com/shopspring/decimal"
@@ -11,23 +10,69 @@ import (
 func TestAVLOrder(t *testing.T) {
 	order := createDummyOrders()
 
-	avl := orderDomain.NewAvlOrderTree(order[0])
-	log.Println("AVL Tree initialized with first order:", avl)
-	// Insert elements
-
-	for _, ord := range order[1:] {
-		avl.Insert(ord)
-	}
+	avl := createAvlTree(order)
 
 	if avl == nil {
 		t.Error("Expected AVL tree to be initialized, but it is nil")
 	}
 
-	log.Println("AVL Tree after inserting orders:", avl)
 	if avl.Height() == 0 {
 		t.Error("Expected AVL tree height to be greater than 0, but it is 0")
 	}
 
+}
+
+func TestAVLFindMinOrder(t *testing.T) {
+	orders := createDummyOrders()
+	avl := createAvlTree(orders)
+
+	if avl == nil {
+		t.Fatal("Expected AVL tree to be initialized, but it is nil")
+	}
+
+	minPriceOrder := avl.FindMinOrder()
+
+	if minPriceOrder == nil {
+		t.Fatal("Expected to find an order with minimum price, but got nil")
+	}
+
+	expectedMinPrice := decimal.NewFromFloat(50.00)
+	if minPriceOrder.Price.Cmp(expectedMinPrice) != 0 {
+		t.Errorf("Expected minimum price to be %s, but got %s", expectedMinPrice.String(), minPriceOrder.Price.String())
+	}
+}
+
+func TestAVLFindMaxOrder(t *testing.T) {
+	orders := createDummyOrders()
+	avl := createAvlTree(orders)
+
+	if avl == nil {
+		t.Fatal("Expected AVL tree to be initialized, but it is nil")
+	}
+
+	maxPriceOrder := avl.FindMaxOrder()
+
+	if maxPriceOrder == nil {
+		t.Fatal("Expected to find an order with maximum price, but got nil")
+	}
+
+	expectedMaxPrice := decimal.NewFromFloat(350.00)
+	if maxPriceOrder.Price.Cmp(expectedMaxPrice) != 0 {
+		t.Errorf("Expected maximum price to be %s, but got %s", expectedMaxPrice.String(), maxPriceOrder.Price.String())
+	}
+}
+
+func createAvlTree(orders []orderDomain.Order) *orderDomain.AvlOrderTree {
+	if len(orders) == 0 {
+		return nil
+	}
+
+	avl := orderDomain.NewAvlOrderTree(orders[0])
+	for _, ord := range orders[1:] {
+		avl.Insert(ord)
+	}
+
+	return avl
 }
 
 func createDummyOrders() []orderDomain.Order {

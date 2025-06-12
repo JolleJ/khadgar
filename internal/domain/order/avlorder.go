@@ -1,7 +1,5 @@
 package order
 
-import "log"
-
 type AvlOrderTree struct {
 	data   Order
 	left   *AvlOrderTree
@@ -54,27 +52,26 @@ func (t *AvlOrderTree) RotateLeft() *AvlOrderTree {
 	return newRoot
 }
 
-func (t *AvlOrderTree) Insert(order Order) {
+func (t *AvlOrderTree) Insert(order Order) *AvlOrderTree {
 	if t == nil {
-		return
+		return nil
 	}
-	log.Println("Inserting order:", order)
 	orderPrice, _ := order.Price.Float64()
 	dataPrice, _ := t.data.Price.Float64()
 	if orderPrice < dataPrice {
 		if t.left == nil {
 			t.left = NewAvlOrderTree(order)
 		} else {
-			t.left.Insert(order)
+			t.left = t.left.Insert(order)
 		}
 	} else if orderPrice > dataPrice {
 		if t.right == nil {
 			t.right = NewAvlOrderTree(order)
 		} else {
-			t.right.Insert(order)
+			t.right = t.right.Insert(order)
 		}
 	} else {
-		return // Duplicate keys are not allowed
+		return nil
 	}
 
 	t.height = max(t.left.Height(), t.right.Height()) + 1
@@ -84,12 +81,10 @@ func (t *AvlOrderTree) Insert(order Order) {
 		if t.left != nil {
 			leftValue, _ := t.left.data.Price.Float64()
 			if orderPrice < leftValue {
-				t = t.RotateRight()
-				return
+				return t.RotateRight()
 			} else if orderPrice > leftValue {
-				t = t.left.RotateLeft()
-				t = t.RotateRight()
-				return
+				t.left = t.left.RotateLeft()
+				return t.left.RotateRight()
 			}
 		}
 	}
@@ -98,14 +93,36 @@ func (t *AvlOrderTree) Insert(order Order) {
 		if t.right != nil {
 			rightValue, _ := t.right.data.Price.Float64()
 			if orderPrice > rightValue {
-				t = t.RotateLeft()
-				return
+				return t.RotateLeft()
 			} else if orderPrice < rightValue {
-				t = t.right.RotateRight()
-				t = t.RotateLeft()
-				return
+				t.right = t.right.RotateRight()
+				return t.right.RotateLeft()
 			}
 		}
 	}
 
+	return t
+}
+
+func (t *AvlOrderTree) FindMinOrder() *Order {
+	if t == nil {
+		return nil
+	}
+	current := t
+	for current.left != nil {
+		current = current.left
+	}
+	return &current.data
+}
+
+func (t *AvlOrderTree) FindMaxOrder() *Order {
+	if t == nil {
+		return nil
+	}
+
+	current := t
+	for current.right != nil {
+		current = current.right
+	}
+	return &current.data
 }
