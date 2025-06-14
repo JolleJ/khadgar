@@ -5,7 +5,7 @@ import (
 	"jollej/db-scout/internal/application/instrument"
 	orderApp "jollej/db-scout/internal/application/order"
 	"jollej/db-scout/internal/domain/order"
-	"log"
+	"jollej/db-scout/lib/prettylog"
 	"sync"
 )
 
@@ -17,6 +17,7 @@ type MatchingEngine struct {
 
 func NewMatchingEngine(instrumentService *instrument.InstrumentService, orderService *orderApp.OrderService) *MatchingEngine {
 
+	log := prettylog.NewPrettyLog()
 	orderChannels := sync.Map{}
 	ctx := context.TODO()
 	instrumentsList := instrumentService.List(ctx)
@@ -25,7 +26,7 @@ func NewMatchingEngine(instrumentService *instrument.InstrumentService, orderSer
 	}
 
 	orderChannels.Range(func(key, value any) bool {
-		log.Println("Starting matching worker for instrument:", key)
+		log.Infof("Starting matching worker for instrument: %v", key)
 		symbol := key.(string)
 		ch := value.(chan order.Order)
 		go func() {
