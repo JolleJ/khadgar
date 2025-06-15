@@ -50,6 +50,13 @@ func (me *MatchingEngine) RegisterInstrument(instrument string) {
 }
 
 func (me *MatchingEngine) PlaceOrder(instrument string, ord order.Order) {
+	ctx := context.TODO()
+	id, err := me.orderService.Create(ctx, ord)
+	ord.Id = id
+	if err != nil {
+		prettylog.NewPrettyLog().Errorf("Failed to place order: %v", err)
+		return
+	}
 	if ch, ok := me.orderChannel.Load(instrument); ok {
 		ch.(chan order.Order) <- ord
 	} else {
@@ -61,8 +68,12 @@ func (me *MatchingEngine) PlaceOrder(instrument string, ord order.Order) {
 }
 
 func RunMatchingLoop(symbol string, ch chan order.Order, orderService *orderApp.OrderService) {
-	orderApp.NewOrderBook(symbol, orderService)
+	orderbook := orderApp.NewOrderBook(symbol, orderService)
 	for ord := range ch {
+		if ord.Side == "buy" {
+			orderbook.AddBuyOrder(&ord)
+		} else if ord.Side == "sell" {
+		}
 		// Here you would implement the logic to match orders
 		// For now, we just print the order
 		println("Matching order:", ord.Id, "for instrument:", symbol)

@@ -8,8 +8,8 @@ import (
 )
 
 type AvlOrderTreeNode struct {
-	key    decimal.Decimal
-	data   *list.List
+	Key    decimal.Decimal
+	Data   *list.List
 	left   *AvlOrderTreeNode
 	right  *AvlOrderTreeNode
 	height int
@@ -19,8 +19,8 @@ func NewAvlOrderTree(order Order) *AvlOrderTreeNode {
 	l := list.New()
 	l.PushBack(&order)
 	return &AvlOrderTreeNode{
-		key:    order.Price,
-		data:   l,
+		Key:    order.Price,
+		Data:   l,
 		left:   nil,
 		right:  nil,
 		height: 1,
@@ -68,7 +68,7 @@ func (t *AvlOrderTreeNode) Insert(order Order) *AvlOrderTreeNode {
 		return nil
 	}
 	orderPrice, _ := order.Price.Float64()
-	dataPrice, _ := t.key.Float64()
+	dataPrice, _ := t.Key.Float64()
 	if orderPrice < dataPrice {
 		if t.left == nil {
 			t.left = NewAvlOrderTree(order)
@@ -84,16 +84,17 @@ func (t *AvlOrderTreeNode) Insert(order Order) *AvlOrderTreeNode {
 	} else {
 		// If the price is the same, append the order to the existing data slice
 		// The *t.data will have to be sorted according to create date where the first order is the newest
-		t.data.PushBack(&order)
+		t.Data.PushBack(&order)
 		return t
 	}
 
 	t.height = max(t.left.Height(), t.right.Height()) + 1
 
+	// Run rebalance here
 	balance := t.GetBalance()
 	if balance > 1 {
 		if t.left != nil {
-			leftValue, _ := t.left.key.Float64()
+			leftValue, _ := t.left.Key.Float64()
 			if orderPrice < leftValue {
 				return t.RotateRight()
 			} else if orderPrice > leftValue {
@@ -105,7 +106,7 @@ func (t *AvlOrderTreeNode) Insert(order Order) *AvlOrderTreeNode {
 
 	if balance < -1 {
 		if t.right != nil {
-			rightValue, _ := t.right.key.Float64()
+			rightValue, _ := t.right.Key.Float64()
 			if orderPrice > rightValue {
 				return t.RotateLeft()
 			} else if orderPrice < rightValue {
@@ -118,6 +119,23 @@ func (t *AvlOrderTreeNode) Insert(order Order) *AvlOrderTreeNode {
 	return t
 }
 
+func (t *AvlOrderTreeNode) FindLowestOrderFromPrice(price decimal.Decimal) *Order {
+
+	if t == nil {
+		return nil
+	}
+	current := t
+	for current.left != nil {
+		current = current.left
+
+	}
+	oldest := current.Data.Front()
+	if oldest == nil {
+		log.Println("No orders found in the AVL tree")
+		return nil
+	}
+	return oldest.Value.(*Order)
+}
 func (t *AvlOrderTreeNode) FindMinOrder() *Order {
 	if t == nil {
 		return nil
@@ -127,12 +145,52 @@ func (t *AvlOrderTreeNode) FindMinOrder() *Order {
 		current = current.left
 
 	}
-	oldest := current.data.Front()
+	oldest := current.Data.Front()
 	if oldest == nil {
 		log.Println("No orders found in the AVL tree")
 		return nil
 	}
 	return oldest.Value.(*Order)
+}
+
+func (t *AvlOrderTreeNode) FindMinOrderNode() *AvlOrderTreeNode {
+	if t == nil {
+		return nil
+	}
+	current := t
+	for current.left != nil {
+		current = current.left
+	}
+
+	oldest := current.Data.Front()
+	if oldest == nil {
+		log.Println("No orders found in the AVL tree")
+		return nil
+	}
+	return t
+}
+
+func (t *AvlOrderTreeNode) UpdateOrder(order Order) *AvlOrderTreeNode {
+	if t == nil {
+		return nil
+	}
+
+	switch order.Price.Cmp(t.Key) {
+	case -1:
+		if t.left != nil {
+			t.left.UpdateOrder(order)
+		}
+	case 1:
+		if t.right != nil {
+			t.right.UpdateOrder(order)
+		}
+	case 0:
+		if t.Data.Len() > 1 {
+
+		}
+
+	}
+	return nil
 }
 
 func (t *AvlOrderTreeNode) FindMaxOrder() *Order {
@@ -144,7 +202,7 @@ func (t *AvlOrderTreeNode) FindMaxOrder() *Order {
 	for current.right != nil {
 		current = current.right
 	}
-	oldest := current.data.Front()
+	oldest := current.Data.Front()
 	if oldest == nil {
 		return nil
 	}
