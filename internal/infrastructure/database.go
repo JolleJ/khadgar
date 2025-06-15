@@ -46,6 +46,11 @@ func InitDb() (*sql.DB, error) {
 		log.Fatalf("Error creating account_balances table: %v", err)
 	}
 
+	err = createMarketData(db)
+	if err != nil {
+		log.Fatalf("Error creating market_data table: %v", err)
+	}
+
 	err = StartWal(db)
 	if err != nil {
 		log.Fatalf("Error starting WAL mode: %v", err)
@@ -182,6 +187,25 @@ func createAccountsBallances(db *sql.DB) error {
 		balance REAL NOT NULL CHECK(balance >= 0),
 		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (portfolio_id) REFERENCES portfolios(id)
+	);`
+
+	_, err := db.Exec(query)
+	return err
+}
+
+func createMarketData(db *sql.DB) error {
+	query := `CREATE TABLE IF NOT EXISTS market_data (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		ticker TEXT NOT NULL,
+		date TEXT NOT NULL,
+		open REAL NOT NULL CHECK(open >= 0),
+		high REAL NOT NULL CHECK(high >= 0),
+		low REAL NOT NULL CHECK(low >= 0),
+		close REAL NOT NULL CHECK(close >= 0),
+		volume REAL NOT NULL CHECK(volume >= 0),
+		dividends REAL NOT NULL CHECK(dividends >= 0),
+		stock_splits REAL NOT NULL CHECK(stock_splits >= 0),
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);`
 
 	_, err := db.Exec(query)
