@@ -32,11 +32,11 @@ func (o *OrderRepo) Create(ctx context.Context, order order.Order) (int, error) 
 	return int(id), nil
 }
 
-func (o *OrderRepo) ListByInstrument(ctx context.Context, symbol string) ([]order.Order, error) {
+func (o *OrderRepo) ListByInstrument(ctx context.Context, ticker string) ([]order.Order, error) {
 	o.dbMutex.Lock()
 	defer o.dbMutex.Unlock()
-	query := `SELECT id, portfolio_id, instrument_id, side, quantity, price, status FROM orders`
-	rows, err := o.db.QueryContext(ctx, query)
+	query := `SELECT id, portfolio_id, instrument_id, side, quantity, price, status FROM orders WHERE instrument_id = (SELECT id FROM instruments WHERE ticker = ?)`
+	rows, err := o.db.QueryContext(ctx, query, ticker)
 	if err != nil {
 		return nil, err
 	}

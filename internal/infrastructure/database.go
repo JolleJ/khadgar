@@ -243,7 +243,8 @@ func createDummyData(db *sql.DB) error {
 	(1, 2, 'sell', 5, 250.00, 'completed'),
 	(2, 3, 'buy', 8, 700.00, 'completed'),
 	(2, 4, 'sell', 12, 1800.00, 'completed'),
-	(3, 5, 'buy', 15, 2800.00, 'completed');
+	(3, 5, 'buy', 15, 2800.00, 'completed'),
+	(3, 1, 'sell', 15, 2800.00, 'completed');
 	INSERT INTO trades (order_id, quantity, price, status) VALUES
 	(1, 10, 150.00, 'completed'),
 	(2, 5, 250.00, 'completed'),

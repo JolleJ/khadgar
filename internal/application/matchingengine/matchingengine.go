@@ -6,6 +6,7 @@ import (
 	orderApp "jollej/db-scout/internal/application/order"
 	"jollej/db-scout/internal/domain/order"
 	"jollej/db-scout/lib/prettylog"
+	"log"
 	"sync"
 )
 
@@ -50,6 +51,7 @@ func (me *MatchingEngine) RegisterInstrument(instrument string) {
 }
 
 func (me *MatchingEngine) PlaceOrder(instrument string, ord order.Order) {
+
 	ctx := context.TODO()
 	id, err := me.orderService.Create(ctx, ord)
 	ord.Id = id
@@ -58,6 +60,7 @@ func (me *MatchingEngine) PlaceOrder(instrument string, ord order.Order) {
 		return
 	}
 	if ch, ok := me.orderChannel.Load(instrument); ok {
+		log.Println("Found existing channel for instrument:", instrument)
 		ch.(chan order.Order) <- ord
 	} else {
 		newChan := make(chan order.Order)
@@ -68,8 +71,10 @@ func (me *MatchingEngine) PlaceOrder(instrument string, ord order.Order) {
 }
 
 func RunMatchingLoop(symbol string, ch chan order.Order, orderService *orderApp.OrderService) {
+	log := prettylog.NewPrettyLog()
 	orderbook := orderApp.NewOrderBook(symbol, orderService)
 	for ord := range ch {
+		log.Infof("Received order: %v", ord)
 		if ord.Side == "buy" {
 			orderbook.AddBuyOrder(&ord)
 		} else if ord.Side == "sell" {

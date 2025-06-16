@@ -92,8 +92,8 @@ func (ob *OrderBook) AddBuyOrder(ord *order.Order) {
 		return
 	}
 	qty := ord.Quantity
-
-	for minSellOrder := ob.sellOrders.FindMinOrderNode(); minSellOrder != nil && !qty.IsZero(); minSellOrder = ob.sellOrders.FindMinOrderNode() {
+	for minSellOrder := ob.sellOrders.FindMinOrderNode(); minSellOrder != nil && !qty.IsZero(); {
+		log.Infof("Found minimum sell order")
 		sellP, exact := minSellOrder.Key.Float64()
 		if !exact {
 			return
@@ -160,6 +160,7 @@ func (ob *OrderBook) AddBuyOrder(ord *order.Order) {
 
 			}
 
+			log.Infof("Found no more sell orders to match with buy order %v", ord)
 			// Add cleanup logic for the sell order if minselloder.Data.Len() == 0
 			if minSellOrder.Data.Len() == 0 {
 				log.Infof("Removing sell order %v from the order book as it has been fully matched", sellOrder)

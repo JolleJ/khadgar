@@ -124,6 +124,7 @@ func (t *AvlOrderTreeNode) FindLowestOrderFromPrice(price decimal.Decimal) *Orde
 	if t == nil {
 		return nil
 	}
+
 	current := t
 	for current.left != nil {
 		current = current.left
@@ -154,19 +155,28 @@ func (t *AvlOrderTreeNode) FindMinOrder() *Order {
 }
 
 func (t *AvlOrderTreeNode) FindMinOrderNode() *AvlOrderTreeNode {
+	log.Println("Finding minimum order node in AVL tree")
 	if t == nil {
 		return nil
 	}
 	current := t
+	log.Printf("Starting from root node with key: %s", current.Key.String())
 	for current.left != nil {
+		log.Printf("Current node key: %s", current.Key.String())
 		current = current.left
 	}
-
+	log.Printf("Reached leftmost node with key: %s", current.Key.String())
+	if current.Data == nil || current.Data.Len() == 0 {
+		log.Println("No orders found in the AVL tree")
+		return nil
+	}
 	oldest := current.Data.Front()
+	log.Printf("Oldest order found with price: %s", current.Key.String())
 	if oldest == nil {
 		log.Println("No orders found in the AVL tree")
 		return nil
 	}
+	log.Printf("Found minimum order with price: %s", current.Key.String())
 	return t
 }
 
