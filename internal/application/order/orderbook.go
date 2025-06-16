@@ -6,7 +6,6 @@ import (
 	"jollej/db-scout/internal/domain/order"
 	tradeDomain "jollej/db-scout/internal/domain/trade"
 	"jollej/db-scout/lib/prettylog"
-	"log"
 	"slices"
 	"time"
 
@@ -28,31 +27,29 @@ type OrderBook struct {
 	sellOrders       *order.AvlOrderTreeNode
 }
 
-func NewOrderBook(symbol string, orderService *OrderService) *OrderBook {
+func NewOrderBook(symbol string, orderService *OrderService, tradeService *trade.TradeService) *OrderBook {
 
 	ctx := context.TODO()
 	var buyOrdersValues []float64
-	buyOrders := &order.AvlOrderTreeNode{}
-	sellOrders := &order.AvlOrderTreeNode{}
+	var buyOrders *order.AvlOrderTreeNode
+	var sellOrders *order.AvlOrderTreeNode
 	var sellOrdersValues []float64
-
+	log := prettylog.NewPrettyLog()
 	orders, err := orderService.ListOrdersByInstrument(ctx, symbol)
 	if err != nil {
 		panic("Failed to load orders for instrument: " + symbol + " - " + err.Error())
 	}
-
 	for _, ord := range orders {
-		if buyOrders == (&order.AvlOrderTreeNode{}) {
-			buyOrders = order.NewAvlOrderTree(ord)
-		}
 
-		if sellOrders == (&order.AvlOrderTreeNode{}) {
+		if buyOrders == nil && ord.Side == "buy" {
+			buyOrders = order.NewAvlOrderTree(ord)
+		} else if sellOrders == nil && ord.Side == "sell" {
 			sellOrders = order.NewAvlOrderTree(ord)
 		}
 		if ord.Side == "buy" {
 			p, exact := ord.Price.Float64()
 			if !exact {
-				log.Default().Println("Failed to convert price to float64 for order:", ord)
+				log.Infof("Failed to convert price to float64 for order: %v", ord)
 				continue
 			}
 			buyOrders.Insert(ord)
@@ -60,13 +57,14 @@ func NewOrderBook(symbol string, orderService *OrderService) *OrderBook {
 		} else if ord.Side == "sell" {
 			p, exact := ord.Price.Float64()
 			if !exact {
-				log.Default().Println("Failed to convert price to float64 for order:", ord)
+				log.Infof("Failed to convert price to float64 for order: %v", ord)
 				continue
 			}
 			sellOrders.Insert(ord)
 			sellOrdersValues = append(sellOrdersValues, p)
 		} else {
-			log.Default().Println("Unknown order side for order:", ord)
+			log.Infof("Unknown order side for order: %v", ord)
+			continue
 		}
 	}
 
@@ -76,6 +74,7 @@ func NewOrderBook(symbol string, orderService *OrderService) *OrderBook {
 	return &OrderBook{
 		Instrument:       symbol,
 		orderService:     orderService,
+		tradeService:     tradeService,
 		buyOrdersValues:  buyOrdersValues,
 		sellOrdersValues: sellOrdersValues,
 		buyOrders:        buyOrders,
@@ -103,8 +102,7 @@ func (ob *OrderBook) AddBuyOrder(ord *order.Order) {
 			break // No more sell orders can be matched
 		}
 		if minSellOrder.Data.Len() > 0 && !qty.IsZero() {
-			log.Infof("Matching buy order %v with sell order at price %f", ord, sellP)
-
+			// Get the first sell order from the minimum sell order node
 			sellOrder := minSellOrder.Data.Front().Value.(*order.Order)
 
 			switch ord.Quantity.Cmp(sellOrder.Quantity) {
@@ -121,11 +119,13 @@ func (ob *OrderBook) AddBuyOrder(ord *order.Order) {
 					Status:     "completed",
 					ExecutedAt: time.Now().Format(time.RFC3339),
 				}
+				log.Infof("traderservice HEHE %v", ob.tradeService)
 				_, err := ob.tradeService.CreateTrade(ctx, trade)
 				if err != nil {
 					log.Errorf("Failed to create trade for order %v: %v", ord, err)
 					return
 				}
+				log.Infof("Done %v", trade)
 			case 1: // Buy order quantity is greater than sell order quantity
 				log.Infof("Partially matching sell order %v with buy order %v", sellOrder, ord)
 				qty = ord.Quantity.Sub(sellOrder.Quantity)
@@ -141,6 +141,8 @@ func (ob *OrderBook) AddBuyOrder(ord *order.Order) {
 					log.Errorf("Failed to create trade for order %v: %v", ord, err)
 					return
 				}
+				log.Infof("Created trade for buy order %v with sell order %v", ord, sellOrder)
+
 				// Remove the sell order from the order book
 				minSellOrder.Data.Remove(minSellOrder.Data.Front())
 			case 0: // Buy order quantity is equal to sell order Quantity

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"jollej/db-scout/internal/domain/trade"
+	"jollej/db-scout/lib/prettylog"
 )
 
 type TradeRepo struct {
@@ -15,6 +16,8 @@ func NewTradeRepo(db *sql.DB) trade.TradeRepo {
 }
 
 func (t *TradeRepo) CreateTrade(ctx context.Context, trade trade.Trade) (int, error) {
+	log := prettylog.NewPrettyLog()
+	log.Infof("Creating trade: %+v", trade)
 	query := `INSERT INTO trades (order_id, quantity, price, executed_at, status) VALUES (?, ?, ?, ?, ?)`
 	result, err := t.db.Exec(query, trade.OrderId, trade.Quantity, trade.Price, trade.ExecutedAt, trade.Status)
 	if err != nil {

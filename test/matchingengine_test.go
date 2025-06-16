@@ -4,10 +4,12 @@ import (
 	instrumentApplication "jollej/db-scout/internal/application/instrument"
 	"jollej/db-scout/internal/application/matchingengine"
 	orderApp "jollej/db-scout/internal/application/order"
+	tradeApp "jollej/db-scout/internal/application/trade"
 	orderDomain "jollej/db-scout/internal/domain/order"
 	"jollej/db-scout/internal/infrastructure"
 	"jollej/db-scout/internal/infrastructure/repository/instrument"
 	"jollej/db-scout/internal/infrastructure/repository/order"
+	"jollej/db-scout/internal/infrastructure/repository/trade"
 	"testing"
 	"time"
 
@@ -23,7 +25,9 @@ func TestMatchingEngineInit(t *testing.T) {
 	instrumentService := instrumentApplication.NewInstrumentService(instrumentRepo)
 	orderRepo := order.NewOrderRepo(db)
 	orderService := orderApp.NewOrderService(orderRepo)
-	engine := matchingengine.NewMatchingEngine(instrumentService, orderService)
+	tradeRepo := trade.NewTradeRepo(db)
+	tradeService := tradeApp.NewTradeService(tradeRepo)
+	engine := matchingengine.NewMatchingEngine(instrumentService, orderService, tradeService)
 
 	// time.Sleep(4000 * time.Millisecond)
 	if engine == nil {
@@ -32,6 +36,7 @@ func TestMatchingEngineInit(t *testing.T) {
 }
 
 func TestMatchingEngineAddBuyOrder(t *testing.T) {
+
 	db, err := infrastructure.InitDb()
 	if err != nil {
 		t.Fatalf("Failed to initialize the database: %v", err)
@@ -40,7 +45,9 @@ func TestMatchingEngineAddBuyOrder(t *testing.T) {
 	instrumentService := instrumentApplication.NewInstrumentService(instrumentRepo)
 	orderRepo := order.NewOrderRepo(db)
 	orderService := orderApp.NewOrderService(orderRepo)
-	engine := matchingengine.NewMatchingEngine(instrumentService, orderService)
+	tradeRepo := trade.NewTradeRepo(db)
+	tradeService := tradeApp.NewTradeService(tradeRepo)
+	engine := matchingengine.NewMatchingEngine(instrumentService, orderService, tradeService)
 
 	order := orderDomain.Order{
 		Id:           999,
