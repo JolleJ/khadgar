@@ -1,6 +1,9 @@
 package prettylog
 
-import "log"
+import (
+	"fmt"
+	"log"
+)
 
 const (
 	Reset   = "\033[0m"
@@ -30,34 +33,38 @@ func (p *PrettyLog) Info(msg string) {
 }
 func (p *PrettyLog) Infof(msg string, args ...any) {
 	p.infoLog.SetPrefix(Info + p.infoLog.Prefix() + Reset)
-	p.infoLog.Printf(msg, args...)
+	formattedMsg := fmt.Sprintf(msg, args...)
+	_ = p.infoLog.Output(2, formattedMsg)
 }
 
 func (p *PrettyLog) Debug(msg string) {
 	p.debugLog.SetPrefix(Info + p.debugLog.Prefix() + Reset)
-	p.debugLog.Println(msg)
+	_ = p.infoLog.Output(2, msg)
 }
 
 func (p *PrettyLog) Debugf(msg string, args ...any) {
 	p.debugLog.SetPrefix(Info + p.debugLog.Prefix() + Reset)
-	p.debugLog.Printf(msg, args...)
+	formattedMsg := fmt.Sprintf(msg, args...)
+	_ = p.infoLog.Output(2, formattedMsg)
 }
 
 func (p *PrettyLog) Error(msg string) {
 	p.errorLog.SetPrefix(Error + p.errorLog.Prefix() + Reset)
-	p.errorLog.Println(msg)
-}
+	_ = p.infoLog.Output(2, msg)
 
+}
 func (p *PrettyLog) Errorf(msg string, args ...any) {
 	p.errorLog.SetPrefix(Error + p.errorLog.Prefix() + Reset)
-	p.errorLog.Printf(msg, args...)
+	formattedMsg := fmt.Sprintf(msg, args...)
+	_ = p.infoLog.Output(2, formattedMsg)
 }
 
 func (p *PrettyLog) Warning(msg string) {
 	p.infoLog.SetPrefix(Warning + p.infoLog.Prefix() + Reset)
-	p.infoLog.Println(msg)
+	_ = p.infoLog.Output(2, msg)
 }
 func (p *PrettyLog) Warningf(msg string, args ...any) {
 	p.infoLog.SetPrefix(Warning + p.infoLog.Prefix() + Reset)
-	p.infoLog.Printf(msg, args...)
+	formattedMsg := fmt.Sprintf(msg, args...)
+	_ = p.infoLog.Output(2, formattedMsg)
 }

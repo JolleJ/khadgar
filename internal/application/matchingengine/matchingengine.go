@@ -79,19 +79,13 @@ func (me *MatchingEngine) PlaceOrder(instrument string, ord order.Order) {
 }
 
 func RunMatchingLoop(symbol string, ch chan order.Order, orderService *orderApp.OrderService, tradeService *trade.TradeService) {
-	log := prettylog.NewPrettyLog()
-	log.Infof("Traderservice %v", tradeService)
 	orderbook := orderApp.NewOrderBook(symbol, orderService, tradeService)
 	for ord := range ch {
-		// log.Infof("Received order: %v", ord)
 		if ord.Side == "buy" {
 			orderbook.AddBuyOrder(&ord)
 			ch <- ord // Echo back the order to the channel for testing purposes this has to be revisited later
 		} else if ord.Side == "sell" {
 
 		}
-		// Here you would implement the logic to match orders
-		// For now, we just print the order
-		// println("Matching order:", ord.Id, "for instrument:", symbol)
 	}
 }
