@@ -100,7 +100,7 @@ func (ob *OrderBook) AddBuyOrder(ord *order.Order) {
 			return
 		} // Check if the buy order can match with the minimum sell order
 		if p < sellP {
-			log.Infof("Buy order %v cannot match with sell order at price %f", ord, sellP)
+			log.Infof("Buy order %+v cannot match with sell order at price %f", ord, sellP)
 			break // No more sell orders can be matched
 		}
 		if minSellOrder.Data.Len() > 0 && !qty.IsZero() {
@@ -111,9 +111,9 @@ func (ob *OrderBook) AddBuyOrder(ord *order.Order) {
 			case -1:
 				// Buy order quantity is less than sell order Quantity
 				// Complete the buy order and update the sell order
-				log.Infof("Partially matching buy order %v with sell order %v", *ord, sellOrder)
+				log.Infof("Partially matching buy order %+v with sell order %+v", *ord, sellOrder)
 				sellOrder.Quantity = sellOrder.Quantity.Sub(ord.Quantity)
-				log.Infof("Sell order %v updated with new quantity %v", sellOrder, sellOrder.Quantity)
+				log.Infof("Sell order %+v updated with new quantity %+v", sellOrder, sellOrder.Quantity)
 				qty = decimal.Zero
 				trade := tradeDomain.Trade{
 					OrderId:    sellOrder.Id,
@@ -129,9 +129,9 @@ func (ob *OrderBook) AddBuyOrder(ord *order.Order) {
 				}
 
 				// Update the buy order status to completed
-				log.Infof("Done %v", trade)
+				log.Infof("Done %+v", trade)
 			case 1: // Buy order quantity is greater than sell order quantity
-				log.Infof("Partially matching sell order %v with buy order %v", sellOrder, *ord)
+				log.Infof("Partially matching sell order %+v with buy order %+v", sellOrder, *ord)
 				qty = ord.Quantity.Sub(sellOrder.Quantity)
 				trade := tradeDomain.Trade{
 					OrderId:    sellOrder.Id,
@@ -145,7 +145,7 @@ func (ob *OrderBook) AddBuyOrder(ord *order.Order) {
 					log.Errorf("Failed to create trade for order %v: %v", *ord, err)
 					return
 				}
-				log.Infof("Created trade for buy order %v with sell order %v", *ord, sellOrder)
+				log.Infof("Created trade for buy order %+v with sell order %+v", *ord, sellOrder)
 
 				// Remove the sell order from the order book
 				minSellOrder.Data.Remove(minSellOrder.Data.Front())
@@ -162,20 +162,27 @@ func (ob *OrderBook) AddBuyOrder(ord *order.Order) {
 					log.Errorf("Failed to create trade for order %v: %v", ord, err)
 					return
 				}
-				log.Infof("Fully matching buy order %v with sell order %v", ord, sellOrder)
+				log.Infof("Fully matching buy order %+v with sell order %+v", ord, sellOrder)
 
 			}
 
-			if qty.IsZero() {
-				log.Infof("Buy order %v has been fully matched", ord)
-				// Add cleanup logic for the buy order if buyOrders.Data.Len() == 0
-			}
-			log.Infof("Found no more sell orders to match with buy order %v", ord)
 			// Add cleanup logic for the sell order if minselloder.Data.Len() == 0
 			if minSellOrder.Data.Len() == 0 {
-				log.Infof("Removing sell order %v from the order book as it has been fully matched", sellOrder)
+				log.Infof("Removing sell order %+v from the order book as it has been fully matched", sellOrder)
 				// ob.sellOrders = ob.sellOrders.DeleteNode(minSellOrder.Key)
 			}
 		}
+			if qty.IsZero() {
+				log.Infof("Buy order %+v has been fully matched", ord)
+				// Add cleanup logic for the buy order if buyOrders.Data.Len() == 0
+				// Lets update the buy order status to completed 
+				err := ob.orderService.SetOrderStatus(ctx, ord.Id, "completed")
+				if err != nil {
+					log.Errorf("Failed to update order status for order %+v: %v", ord, err)
+					return
+				}
+			} else {
+			  log.Infof("Found no more sell orders to match with buy order %+v", ord)
+			}
 	}
 }

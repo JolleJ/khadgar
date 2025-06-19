@@ -53,3 +53,10 @@ func (o *OrderRepo) ListByInstrument(ctx context.Context, ticker string) ([]orde
 
 	return orders, nil
 }
+func (o *OrderRepo) SetStatus(ctx context.Context, orderID int, status string) error {
+	o.dbMutex.Lock()
+	defer o.dbMutex.Unlock()
+	query := `UPDATE orders SET status = ? WHERE id = ?`
+	_, err := o.db.ExecContext(ctx, query, status, orderID)
+	return err
+}

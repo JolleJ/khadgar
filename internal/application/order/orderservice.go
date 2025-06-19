@@ -21,3 +21,7 @@ func (o *OrderService) ListOrdersByInstrument(ctx context.Context, symbol string
 	orders, err := o.orderRepo.ListByInstrument(ctx, symbol)
 	return orders, err
 }
+
+func (o *OrderService) SetOrderStatus(ctx context.Context, orderID int, status string) error {
+	return o.orderRepo.SetStatus(ctx, orderID, status)
+}
