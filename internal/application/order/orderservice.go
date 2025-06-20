@@ -14,6 +14,7 @@ func NewOrderService(orderRepo order.OrderRepo) *OrderService {
 }
 
 func (o *OrderService) Create(ctx context.Context, order order.Order) (int, error) {
+	order.FilledQuantity = order.Quantity
 	return o.orderRepo.Create(ctx, order)
 }
 

@@ -50,13 +50,14 @@ func TestMatchingEngineAddBuyOrder(t *testing.T) {
 	engine := matchingengine.NewMatchingEngine(instrumentService, orderService, tradeService)
 
 	order := orderDomain.Order{
-		Id:           999,
-		PortfolioId:  1,
-		InstrumentId: 1,
-		Side:         "buy",
-		Price:        decimal.NewFromFloat(50000.0),
-		Quantity:     decimal.NewFromFloat(1.0),
-		Status:       "pending",
+		Id:             999,
+		PortfolioId:    1,
+		InstrumentId:   1,
+		Side:           "buy",
+		Price:          decimal.NewFromFloat(50000.0),
+		Quantity:       decimal.NewFromFloat(1.0),
+		FilledQuantity: decimal.NewFromFloat(1.0),
+		Status:         "pending",
 	}
 	time.Sleep(1000 * time.Millisecond) // Wait for the engine to initialize
 	engine.PlaceOrder("AAPL", order)

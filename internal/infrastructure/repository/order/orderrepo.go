@@ -18,8 +18,8 @@ func NewOrderRepo(db *sql.DB) order.OrderRepo {
 }
 
 func (o *OrderRepo) Create(ctx context.Context, order order.Order) (int, error) {
-	query := `INSERT INTO orders (portfolio_id, instrument_id, side, quantity, price, status) VALUES (?, ?, ?, ?, ?, ?)`
-	result, err := o.db.ExecContext(ctx, query, order.PortfolioId, order.InstrumentId, order.Side, order.Quantity, order.Price, order.Status)
+	query := `INSERT INTO orders (portfolio_id, instrument_id, side, quantity, filledQuantity, price, status) VALUES (?, ?, ?, ?, ?, ?, ?)`
+	result, err := o.db.ExecContext(ctx, query, order.PortfolioId, order.InstrumentId, order.Side, order.Quantity, order.FilledQuantity, order.Price, order.Status)
 	if err != nil {
 		return 0, err
 	}

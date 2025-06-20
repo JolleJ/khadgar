@@ -130,7 +130,8 @@ func createOrdersTable(db *sql.DB) error {
 		portfolio_id INTEGER NOT NULL,
 		instrument_id INTEGER NOT NULL,
 		side TEXT NOT NULL CHECK(side IN ('buy', 'sell')),
-		quantity REAL NOT NULL CHECK(quantity > 0),
+		quantity REAL NOT NULL,
+		filledQuantity REAL NOT NULL, 
 		price REAL NOT NULL CHECK(price >= 0),
 		order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		status TEXT NOT NULL CHECK(status IN ('pending', 'completed', 'cancelled')),
@@ -238,13 +239,17 @@ func createDummyData(db *sql.DB) error {
 	(2, 3, 8 ),
 	(2, 4, 12),
 	(3, 5, 15);
-	INSERT INTO orders (portfolio_id, instrument_id, side, quantity, price, status) VALUES
-	(1, 1, 'buy', 10, 150.00, 'completed'),
-	(1, 2, 'sell', 5, 250.00, 'completed'),
-	(2, 3, 'buy', 8, 700.00, 'completed'),
-	(2, 4, 'sell', 12, 1800.00, 'completed'),
-	(3, 5, 'buy', 15, 2800.00, 'completed'),
-	(3, 1, 'sell', 15, 2800.00, 'completed');
+	INSERT INTO orders (portfolio_id, instrument_id, side, quantity, filledQuantity, price, status) VALUES
+	(1, 1, 'buy', 10, 10, 150.00, 'completed'),
+	(1, 2, 'sell', 5, 5, 250.00, 'completed'),
+	(2, 3, 'buy', 8, 8, 700.00, 'completed'),
+	(2, 4, 'sell', 12, 12, 1800.00, 'completed'),
+	(3, 5, 'buy', 15, 15, 2800.00, 'completed'),
+	(3, 1, 'sell', 1, 1, 100.00, 'completed'),
+	(3, 1, 'sell', 1, 1, 200.00, 'completed'),
+	(3, 1, 'sell', 1, 1, 200.00, 'completed'),
+	(3, 1, 'sell', 1, 1, 200.00, 'completed'),
+	(3, 1, 'sell', 1, 1, 200.00, 'completed');
 	INSERT INTO trades (order_id, quantity, price, status) VALUES
 	(1, 10, 150.00, 'completed'),
 	(2, 5, 250.00, 'completed'),

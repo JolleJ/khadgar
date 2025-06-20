@@ -92,10 +92,7 @@ func (ob *OrderBook) AddBuyOrder(ord *order.Order) {
 	}
 	qty := ord.Quantity
 	for minSellOrder := ob.sellOrders.FindMinOrderNode(); minSellOrder != nil && !qty.IsZero(); {
-		log.Infof("Found minimum sell order")
 		sellP, exact := minSellOrder.Key.Float64()
-		log.Infof("Minimum sell order price: %f", sellP)
-		log.Infof("Buy order price: %f", p)
 		if !exact {
 			return
 		} // Check if the buy order can match with the minimum sell order
@@ -127,9 +124,8 @@ func (ob *OrderBook) AddBuyOrder(ord *order.Order) {
 					log.Errorf("Failed to create trade for order %v: %v", *ord, err)
 					return
 				}
+				// Update the sell order quantity in the order book
 
-				// Update the buy order status to completed
-				log.Infof("Done %+v", trade)
 			case 1: // Buy order quantity is greater than sell order quantity
 				log.Infof("Partially matching sell order %+v with buy order %+v", sellOrder, *ord)
 				qty = ord.Quantity.Sub(sellOrder.Quantity)
@@ -150,20 +146,39 @@ func (ob *OrderBook) AddBuyOrder(ord *order.Order) {
 				// Remove the sell order from the order book
 				minSellOrder.Data.Remove(minSellOrder.Data.Front())
 			case 0: // Buy order quantity is equal to sell order Quantity
-				trade := tradeDomain.Trade{
+				buyTrade := tradeDomain.Trade{
 					OrderId:    ord.Id,
-					Price:      ord.Price,
-					Quantity:   ord.Quantity,
+					Price:      sellOrder.Price,
+					Quantity:   sellOrder.Quantity,
 					Status:     "completed",
 					ExecutedAt: time.Now().Format(time.RFC3339),
 				}
-				_, err := ob.tradeService.CreateTrade(ctx, trade)
+				qty = decimal.Zero
+				_, err := ob.tradeService.CreateTrade(ctx, buyTrade)
 				if err != nil {
 					log.Errorf("Failed to create trade for order %v: %v", ord, err)
 					return
 				}
-				log.Infof("Fully matching buy order %+v with sell order %+v", ord, sellOrder)
+				sellTrade := tradeDomain.Trade{
+					OrderId:    sellOrder.Id,
+					Price:      sellOrder.Price,
+					Quantity:   sellOrder.Quantity,
+					Status:     "completed",
+					ExecutedAt: time.Now().Format(time.RFC3339),
+				}
+				_, err = ob.tradeService.CreateTrade(ctx, sellTrade)
 
+				if err != nil {
+					log.Errorf("Failed to create trade for order %v: %v", sellOrder, err)
+					return
+				}
+				// Set the sell order status to completed
+				err = ob.orderService.SetOrderStatus(ctx, sellOrder.Id, "completed")
+				if err != nil {
+					log.Errorf("Failed to update order status for order %+v: %v", sellOrder, err)
+					return
+				}
+				log.Infof("Fully matching buy order %+v with sell order %+v", ord, sellOrder)
 			}
 
 			// Add cleanup logic for the sell order if minselloder.Data.Len() == 0
@@ -172,17 +187,17 @@ func (ob *OrderBook) AddBuyOrder(ord *order.Order) {
 				// ob.sellOrders = ob.sellOrders.DeleteNode(minSellOrder.Key)
 			}
 		}
-			if qty.IsZero() {
-				log.Infof("Buy order %+v has been fully matched", ord)
-				// Add cleanup logic for the buy order if buyOrders.Data.Len() == 0
-				// Lets update the buy order status to completed 
-				err := ob.orderService.SetOrderStatus(ctx, ord.Id, "completed")
-				if err != nil {
-					log.Errorf("Failed to update order status for order %+v: %v", ord, err)
-					return
-				}
-			} else {
-			  log.Infof("Found no more sell orders to match with buy order %+v", ord)
+		if qty.IsZero() {
+			log.Infof("Buy order %+v has been fully matched", ord)
+			// Add cleanup logic for the buy order if buyOrders.Data.Len() == 0
+			// Lets update the buy order status to completed
+			err := ob.orderService.SetOrderStatus(ctx, ord.Id, "completed")
+			if err != nil {
+				log.Errorf("Failed to update order status for order %+v: %v", ord, err)
+				return
 			}
+			// Break the loop as the buy order has been fully matched
+			break
+		}
 	}
 }
